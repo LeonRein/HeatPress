@@ -29,16 +29,55 @@ static QueueHandle_t sensorQueue = nullptr;   // SensorData
 static QueueHandle_t uiQueue     = nullptr;   // UICommand
 static QueueHandle_t actionQueue = nullptr;   // UserAction
 
+/* ── Sensor init complete flag ────────────────────────────── */
+static volatile bool sensorInitDone  = false;
+static volatile bool sensorInitOk    = false;
+
 /* ── UI Task ─────────────────────────────────────────────── */
 
 static void uiTask(void *pvParam)
 {
-    /* Initialize display + LVGL (must happen on the task that will drive it) */
+    /* Initialize display + LVGL */
     lv_setup_init();
     ui_theme_init();
+
+    /* ── Init / splash screen ───────────────────────── */
+    lv_obj_t *initScr = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(initScr, SCREEN_WIDTH, SCREEN_HEIGHT);
+    lv_obj_align(initScr, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_bg_color(initScr, COLOR_BG, 0);
+    lv_obj_set_style_bg_opa(initScr, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(initScr, 0, 0);
+    lv_obj_clear_flag(initScr, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *spinner = lv_spinner_create(initScr, 1000, 60);
+    lv_obj_set_size(spinner, 60, 60);
+    lv_obj_align(spinner, LV_ALIGN_CENTER, 0, -20);
+    lv_obj_set_style_arc_color(spinner, COLOR_SURFACE, LV_PART_MAIN);
+    lv_obj_set_style_arc_color(spinner, COLOR_PRIMARY, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(spinner, 6, LV_PART_MAIN);
+    lv_obj_set_style_arc_width(spinner, 6, LV_PART_INDICATOR);
+
+    lv_obj_t *initLabel = lv_label_create(initScr);
+    lv_obj_add_style(initLabel, &style_label_small, 0);
+    lv_label_set_text(initLabel, "Calibrating...\nDo not apply pressure");
+    lv_obj_set_style_text_align(initLabel, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(initLabel, LV_ALIGN_CENTER, 0, 30);
+
+    /* Drive LVGL while waiting for sensor init */
+    TickType_t xLastWake = xTaskGetTickCount();
+    while (!sensorInitDone) {
+        lv_setup_update();
+        vTaskDelayUntil(&xLastWake, pdMS_TO_TICKS(UI_REFRESH_PERIOD_MS));
+    }
+
+    /* Remove init screen */
+    lv_obj_del(initScr);
+
+    /* ── Build main screen ──────────────────────────── */
     ui_screen_create(actionQueue);
 
-    TickType_t xLastWake = xTaskGetTickCount();
+    xLastWake = xTaskGetTickCount();
 
     for (;;) {
         /* Process all pending UI commands from the logic task */
@@ -62,8 +101,12 @@ static void uiTask(void *pvParam)
 
 static void sensorTask(void *pvParam)
 {
-    /* Initialize load cell */
-    if (!loadcell_init()) {
+    /* Initialize load cell (blocking ~2s tare) */
+    bool ok = loadcell_init();
+    sensorInitOk   = ok;
+    sensorInitDone = true;
+
+    if (!ok) {
         /* Send error pressure forever so UI shows something */
         SensorData errData = { 0.0f, false };
         for (;;) {
