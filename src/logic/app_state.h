@@ -7,10 +7,10 @@
  * Application states for the heat press state machine
  */
 enum class AppState : uint8_t {
-    IDLE,       // No pressure detected
-    PRESSING,   // Pressure above threshold, timer starting
-    TIMING,     // Countdown in progress
-    ALERT       // Timer expired, alerting user
+    CALIBRATING, // Sensor initializing or tare in progress
+    IDLE,        // No pressure detected
+    TIMING,      // Countdown in progress
+    ALERT        // Timer expired, alerting user
 };
 
 /**

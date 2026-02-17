@@ -27,17 +27,13 @@ void PressTimer::processPressure(float pressure)
     bool aboveThreshold = (pressure > PRESSURE_THRESHOLD);
 
     switch (state_) {
+        case AppState::CALIBRATING:
+            /* First valid reading after calibration/tare */
+            transitionTo(AppState::IDLE);
+            return;
+
         case AppState::IDLE:
             if (aboveThreshold) {
-                transitionTo(AppState::PRESSING);
-            }
-            break;
-
-        case AppState::PRESSING:
-            if (!aboveThreshold) {
-                transitionTo(AppState::IDLE);
-            } else {
-                /* Start countdown immediately */
                 timerRemaining_ = timerDuration_;
                 timerStartMs_   = millis();
                 transitionTo(AppState::TIMING);
@@ -82,7 +78,7 @@ void PressTimer::processAction(const UserAction &action)
             break;
 
         case UserActionType::TARE:
-            /* Handled externally — sensor task picks it up */
+            transitionTo(AppState::CALIBRATING);
             break;
     }
 }

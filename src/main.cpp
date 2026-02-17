@@ -87,26 +87,9 @@ static void uiTask(void *pvParam)
     /* ── Build main screen ──────────────────────────── */
     ui_screen_create(actionQueue);
 
-    /* ── Tare overlay (reusable, hidden by default) ──── */
-    lv_obj_t *tareOverlay = create_spinner_overlay(
-        lv_scr_act(), "Calibrating...\nDo not apply pressure");
-    lv_obj_add_flag(tareOverlay, LV_OBJ_FLAG_HIDDEN);
-    bool tareShowing = false;
-
     xLastWake = xTaskGetTickCount();
 
     for (;;) {
-        /* Show/hide tare overlay based on sensor task flag */
-        bool tareNow = loadcell_tare_active();
-        if (tareNow && !tareShowing) {
-            lv_obj_clear_flag(tareOverlay, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_move_foreground(tareOverlay);
-            tareShowing = true;
-        } else if (!tareNow && tareShowing) {
-            lv_obj_add_flag(tareOverlay, LV_OBJ_FLAG_HIDDEN);
-            tareShowing = false;
-        }
-
         /* Process all pending UI commands from the logic task */
         UICommand cmd;
         while (xQueueReceive(uiQueue, &cmd, 0) == pdTRUE) {
@@ -183,9 +166,8 @@ static void logicTask(void *pvParam)
         while (xQueueReceive(actionQueue, &action, 0) == pdTRUE) {
             if (action.type == UserActionType::TARE) {
                 loadcell_request_tare();
-            } else {
-                timer.processAction(action);
             }
+            timer.processAction(action);
 
             /* Update timer setting label after +/- press */
             if (action.type == UserActionType::TIMER_INCREMENT ||

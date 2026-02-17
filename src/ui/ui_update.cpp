@@ -9,6 +9,44 @@
 
 /* Track current state for visual updates */
 static AppState currentState = AppState::IDLE;
+
+/* Calibrating overlay (created lazily, shown/hidden on state change) */
+static lv_obj_t *calibratingOverlay = nullptr;
+
+static void set_calibrating_overlay(bool show)
+{
+    if (show) {
+        if (!calibratingOverlay) {
+            calibratingOverlay = lv_obj_create(lv_scr_act());
+            lv_obj_set_size(calibratingOverlay, SCREEN_WIDTH, SCREEN_HEIGHT);
+            lv_obj_align(calibratingOverlay, LV_ALIGN_CENTER, 0, 0);
+            lv_obj_set_style_bg_color(calibratingOverlay, COLOR_BG, 0);
+            lv_obj_set_style_bg_opa(calibratingOverlay, LV_OPA_COVER, 0);
+            lv_obj_set_style_border_width(calibratingOverlay, 0, 0);
+            lv_obj_clear_flag(calibratingOverlay, LV_OBJ_FLAG_SCROLLABLE);
+
+            lv_obj_t *spinner = lv_spinner_create(calibratingOverlay, 1000, 60);
+            lv_obj_set_size(spinner, 60, 60);
+            lv_obj_align(spinner, LV_ALIGN_CENTER, 0, -20);
+            lv_obj_set_style_arc_color(spinner, COLOR_SURFACE, LV_PART_MAIN);
+            lv_obj_set_style_arc_color(spinner, COLOR_PRIMARY, LV_PART_INDICATOR);
+            lv_obj_set_style_arc_width(spinner, 6, LV_PART_MAIN);
+            lv_obj_set_style_arc_width(spinner, 6, LV_PART_INDICATOR);
+
+            lv_obj_t *label = lv_label_create(calibratingOverlay);
+            lv_obj_add_style(label, &style_label_small, 0);
+            lv_label_set_text(label, "Calibrating...\nDo not apply pressure");
+            lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
+            lv_obj_align(label, LV_ALIGN_CENTER, 0, 30);
+        }
+        lv_obj_clear_flag(calibratingOverlay, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_foreground(calibratingOverlay);
+    } else {
+        if (calibratingOverlay) {
+            lv_obj_add_flag(calibratingOverlay, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+}
 static bool alertBlinkOn = false;
 static unsigned long lastBlinkMs = 0;
 
@@ -51,16 +89,6 @@ static void set_idle_colors()
 
     /* Reset screen background */
     lv_obj_set_style_bg_color(lv_scr_act(), COLOR_BG, 0);
-}
-
-static void set_pressing_colors()
-{
-    lv_obj_set_style_bg_color(ui_get_pressure_card(), lv_color_hex(0x1B3A1B), 0);
-    lv_obj_set_style_arc_color(ui_get_timer_arc(), COLOR_SUCCESS, LV_PART_INDICATOR);
-
-    lv_obj_t *status = ui_get_status_label();
-    lv_label_set_text(status, "PRESSING");
-    lv_obj_set_style_text_color(status, COLOR_SUCCESS, 0);
 }
 
 static void set_timing_colors()
@@ -150,12 +178,13 @@ void ui_handle_command(const UICommand &cmd)
             currentState = cmd.state;
             switch (cmd.state) {
                 case AppState::IDLE:
+                    set_calibrating_overlay(false);
                     set_idle_colors();
                     arcAnimating = false;
                     lv_arc_set_value(ui_get_timer_arc(), 0);
                     break;
-                case AppState::PRESSING: set_pressing_colors(); break;
-                case AppState::TIMING:   set_timing_colors();   break;
+                case AppState::CALIBRATING: set_calibrating_overlay(true); break;
+                case AppState::TIMING:      set_timing_colors();          break;
                 case AppState::ALERT:
                     set_alert_colors();
                     arcAnimating = false;
