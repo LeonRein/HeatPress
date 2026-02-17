@@ -33,6 +33,35 @@ static QueueHandle_t actionQueue = nullptr;   // UserAction
 static volatile bool sensorInitDone  = false;
 static volatile bool sensorInitOk    = false;
 
+/* ── Spinner overlay helper ───────────────────────────────── */
+
+static lv_obj_t* create_spinner_overlay(lv_obj_t *parent, const char *text)
+{
+    lv_obj_t *overlay = lv_obj_create(parent);
+    lv_obj_set_size(overlay, SCREEN_WIDTH, SCREEN_HEIGHT);
+    lv_obj_align(overlay, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_bg_color(overlay, COLOR_BG, 0);
+    lv_obj_set_style_bg_opa(overlay, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(overlay, 0, 0);
+    lv_obj_clear_flag(overlay, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *spinner = lv_spinner_create(overlay, 1000, 60);
+    lv_obj_set_size(spinner, 60, 60);
+    lv_obj_align(spinner, LV_ALIGN_CENTER, 0, -20);
+    lv_obj_set_style_arc_color(spinner, COLOR_SURFACE, LV_PART_MAIN);
+    lv_obj_set_style_arc_color(spinner, COLOR_PRIMARY, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(spinner, 6, LV_PART_MAIN);
+    lv_obj_set_style_arc_width(spinner, 6, LV_PART_INDICATOR);
+
+    lv_obj_t *label = lv_label_create(overlay);
+    lv_obj_add_style(label, &style_label_small, 0);
+    lv_label_set_text(label, text);
+    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(label, LV_ALIGN_CENTER, 0, 30);
+
+    return overlay;
+}
+
 /* ── UI Task ─────────────────────────────────────────────── */
 
 static void uiTask(void *pvParam)
@@ -42,27 +71,8 @@ static void uiTask(void *pvParam)
     ui_theme_init();
 
     /* ── Init / splash screen ───────────────────────── */
-    lv_obj_t *initScr = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(initScr, SCREEN_WIDTH, SCREEN_HEIGHT);
-    lv_obj_align(initScr, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_bg_color(initScr, COLOR_BG, 0);
-    lv_obj_set_style_bg_opa(initScr, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(initScr, 0, 0);
-    lv_obj_clear_flag(initScr, LV_OBJ_FLAG_SCROLLABLE);
-
-    lv_obj_t *spinner = lv_spinner_create(initScr, 1000, 60);
-    lv_obj_set_size(spinner, 60, 60);
-    lv_obj_align(spinner, LV_ALIGN_CENTER, 0, -20);
-    lv_obj_set_style_arc_color(spinner, COLOR_SURFACE, LV_PART_MAIN);
-    lv_obj_set_style_arc_color(spinner, COLOR_PRIMARY, LV_PART_INDICATOR);
-    lv_obj_set_style_arc_width(spinner, 6, LV_PART_MAIN);
-    lv_obj_set_style_arc_width(spinner, 6, LV_PART_INDICATOR);
-
-    lv_obj_t *initLabel = lv_label_create(initScr);
-    lv_obj_add_style(initLabel, &style_label_small, 0);
-    lv_label_set_text(initLabel, "Calibrating...\nDo not apply pressure");
-    lv_obj_set_style_text_align(initLabel, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_align(initLabel, LV_ALIGN_CENTER, 0, 30);
+    lv_obj_t *initScr = create_spinner_overlay(
+        lv_scr_act(), "Calibrating...\nDo not apply pressure");
 
     /* Drive LVGL while waiting for sensor init */
     TickType_t xLastWake = xTaskGetTickCount();
@@ -77,9 +87,26 @@ static void uiTask(void *pvParam)
     /* ── Build main screen ──────────────────────────── */
     ui_screen_create(actionQueue);
 
+    /* ── Tare overlay (reusable, hidden by default) ──── */
+    lv_obj_t *tareOverlay = create_spinner_overlay(
+        lv_scr_act(), "Calibrating...\nDo not apply pressure");
+    lv_obj_add_flag(tareOverlay, LV_OBJ_FLAG_HIDDEN);
+    bool tareShowing = false;
+
     xLastWake = xTaskGetTickCount();
 
     for (;;) {
+        /* Show/hide tare overlay based on sensor task flag */
+        bool tareNow = loadcell_tare_active();
+        if (tareNow && !tareShowing) {
+            lv_obj_clear_flag(tareOverlay, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_move_foreground(tareOverlay);
+            tareShowing = true;
+        } else if (!tareNow && tareShowing) {
+            lv_obj_add_flag(tareOverlay, LV_OBJ_FLAG_HIDDEN);
+            tareShowing = false;
+        }
+
         /* Process all pending UI commands from the logic task */
         UICommand cmd;
         while (xQueueReceive(uiQueue, &cmd, 0) == pdTRUE) {

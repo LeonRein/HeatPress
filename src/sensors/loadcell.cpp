@@ -8,6 +8,7 @@ static HX711_ADC LoadCell(PIN_HX711_DT, PIN_HX711_CLK);
 
 /* Atomic tare request flag (safe across tasks) */
 static volatile bool tareRequested = false;
+static volatile bool tareActive_   = false;
 
 bool loadcell_init()
 {
@@ -32,7 +33,9 @@ bool loadcell_read(float &pressure)
 {
     /* Handle pending tare request */
     if (tareRequested) {
+        tareActive_ = true;
         loadcell_do_tare();
+        tareActive_ = false;
         tareRequested = false;
     }
 
@@ -53,6 +56,11 @@ void loadcell_request_tare()
 bool loadcell_tare_pending()
 {
     return tareRequested;
+}
+
+bool loadcell_tare_active()
+{
+    return tareActive_;
 }
 
 void loadcell_do_tare()

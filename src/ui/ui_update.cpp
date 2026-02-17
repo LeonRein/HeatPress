@@ -21,6 +21,19 @@ static bool arcAnimating = false;
 static bool showBar = false;
 static float lastPressureGrams = 0.0f;  /* cached for unit toggle */
 
+/* Format pressure value into buf based on current unit mode */
+static void format_pressure(float grams, char *buf, size_t len)
+{
+    if (showBar) {
+        float forceN = (grams / 1000.0f) * 9.80665f;
+        float areaM2 = (PRESS_AREA_WIDTH_MM * PRESS_AREA_HEIGHT_MM) * 1e-6f;
+        float mbar = forceN / (areaM2 * 1e5f) * 1000.0f;
+        snprintf(buf, len, "%.1f", mbar);
+    } else {
+        snprintf(buf, len, "%.2f", grams / 1000.0f);
+    }
+}
+
 /* ── State color helpers ─────────────────────────────────── */
 
 static void set_idle_colors()
@@ -99,15 +112,7 @@ void ui_handle_command(const UICommand &cmd)
         case UICommandType::UPDATE_PRESSURE: {
             lastPressureGrams = cmd.pressure;
             char buf[16];
-            if (showBar) {
-                /* Force(N) = mass(kg) * g;  Area(m²) = mm² * 1e-6;  bar = Pa / 1e5 */
-                float forceN = (cmd.pressure / 1000.0f) * 9.80665f;
-                float areaM2 = (PRESS_AREA_WIDTH_MM * PRESS_AREA_HEIGHT_MM) * 1e-6f;
-                float mbar = forceN / (areaM2 * 1e5f) * 1000.0f;
-                snprintf(buf, sizeof(buf), "%.1f", mbar);
-            } else {
-                snprintf(buf, sizeof(buf), "%.2f", cmd.pressure / 1000.0f);
-            }
+            format_pressure(cmd.pressure, buf, sizeof(buf));
             lv_label_set_text(ui_get_pressure_label(), buf);
             break;
         }
@@ -241,13 +246,6 @@ void ui_toggle_pressure_unit()
 
     /* Refresh displayed value with cached pressure */
     char buf[16];
-    if (showBar) {
-        float forceN = (lastPressureGrams / 1000.0f) * 9.80665f;
-        float areaM2 = (PRESS_AREA_WIDTH_MM * PRESS_AREA_HEIGHT_MM) * 1e-6f;
-        float mbar = forceN / (areaM2 * 1e5f) * 1000.0f;
-        snprintf(buf, sizeof(buf), "%.1f", mbar);
-    } else {
-        snprintf(buf, sizeof(buf), "%.2f", lastPressureGrams / 1000.0f);
-    }
+    format_pressure(lastPressureGrams, buf, sizeof(buf));
     lv_label_set_text(ui_get_pressure_label(), buf);
 }

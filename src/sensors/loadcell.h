@@ -29,6 +29,12 @@ void loadcell_request_tare();
 bool loadcell_tare_pending();
 
 /**
+ * Check if a tare operation is currently in progress.
+ * Safe to call from any task.
+ */
+bool loadcell_tare_active();
+
+/**
  * Execute the tare operation (blocking, ~1s).
  */
 void loadcell_do_tare();
