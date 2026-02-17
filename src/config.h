@@ -70,7 +70,8 @@
 #define COLOR_ON_BG        lv_color_hex(0xFFFFFF)
 #define COLOR_SUCCESS      lv_color_hex(0x4CAF50)   /* Green */
 #define COLOR_WARNING      lv_color_hex(0xFFC107)   /* Amber */
-#define COLOR_ERROR         lv_color_hex(0xCF6679)   /* Red/pink */
+#define COLOR_ERROR         lv_color_hex(0xFF1744)   /* Vivid red */
+#define COLOR_ALERT_BG      lv_color_hex(0x8B0000)   /* Dark red background */
 #define COLOR_DIMMED       lv_color_hex(0x757575)
 
 #endif /* CONFIG_H */

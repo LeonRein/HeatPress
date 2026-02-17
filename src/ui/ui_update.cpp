@@ -22,6 +22,7 @@ static void set_idle_colors()
     lv_obj_t *status = ui_get_status_label();
     lv_label_set_text(status, "IDLE");
     lv_obj_set_style_text_color(status, COLOR_DIMMED, 0);
+    lv_obj_set_style_text_font(status, &lv_font_montserrat_14, 0);
 
     /* Reset screen background */
     lv_obj_set_style_bg_color(lv_scr_act(), COLOR_BG, 0);
@@ -52,7 +53,12 @@ static void set_alert_colors()
     lv_obj_t *status = ui_get_status_label();
     lv_label_set_text(status, LV_SYMBOL_WARNING " DONE!");
     lv_obj_set_style_text_color(status, COLOR_ERROR, 0);
+    lv_obj_set_style_text_font(status, &lv_font_montserrat_20, 0);
     lv_obj_set_style_arc_color(ui_get_timer_arc(), COLOR_ERROR, LV_PART_INDICATOR);
+
+    /* Immediately set alert background */
+    lv_obj_set_style_bg_color(lv_scr_act(), COLOR_ALERT_BG, 0);
+    lv_obj_set_style_bg_color(ui_get_pressure_card(), COLOR_ERROR, 0);
 }
 
 /* ── Alert blink effect ──────────────────────────────────── */
@@ -68,10 +74,10 @@ static void alert_blink_tick()
 
         if (alertBlinkOn) {
             lv_obj_set_style_bg_color(ui_get_pressure_card(), COLOR_ERROR, 0);
-            lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x3A1010), 0);
+            lv_obj_set_style_bg_color(lv_scr_act(), COLOR_ALERT_BG, 0);
         } else {
-            lv_obj_set_style_bg_color(ui_get_pressure_card(), COLOR_CARD, 0);
-            lv_obj_set_style_bg_color(lv_scr_act(), COLOR_BG, 0);
+            lv_obj_set_style_bg_color(ui_get_pressure_card(), lv_color_hex(0x4A0000), 0);
+            lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x2A0000), 0);
         }
     }
 }
@@ -115,6 +121,11 @@ void ui_handle_command(const UICommand &cmd)
 
         case UICommandType::UPDATE_ARC: {
             lv_arc_set_value(ui_get_timer_arc(), cmd.arcPercent);
+            break;
+        }
+
+        case UICommandType::UPDATE_TIMER_SETTING: {
+            ui_update_timer_setting(cmd.timerSeconds);
             break;
         }
     }

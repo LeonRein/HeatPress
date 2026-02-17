@@ -29,13 +29,14 @@ enum class UICommandType : uint8_t {
     UPDATE_TIMER,         // Update timer display
     UPDATE_STATE,         // State transition
     UPDATE_ARC,           // Update arc progress
+    UPDATE_TIMER_SETTING, // Update "Timer: Xs" setting label
 };
 
 struct UICommand {
     UICommandType type;
     union {
         float    pressure;          // For UPDATE_PRESSURE
-        int      timerSeconds;      // For UPDATE_TIMER (remaining)
+        int      timerSeconds;      // For UPDATE_TIMER / UPDATE_TIMER_SETTING
         AppState state;             // For UPDATE_STATE
         int      arcPercent;        // For UPDATE_ARC (0-100)
     };

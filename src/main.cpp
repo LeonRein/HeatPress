@@ -121,6 +121,11 @@ static void logicTask(void *pvParam)
                 cmd.type         = UICommandType::UPDATE_TIMER;
                 cmd.timerSeconds = timer.getTimerDuration();
                 xQueueSend(uiQueue, &cmd, 0);
+
+                UICommand setCmd;
+                setCmd.type         = UICommandType::UPDATE_TIMER_SETTING;
+                setCmd.timerSeconds = timer.getTimerDuration();
+                xQueueSend(uiQueue, &setCmd, 0);
             }
         }
 
