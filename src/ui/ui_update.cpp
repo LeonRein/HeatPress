@@ -53,7 +53,7 @@ static unsigned long lastBlinkMs = 0;
 /* Arc animation state (local to UI task for smooth updates) */
 static unsigned long arcStartMs  = 0;
 static unsigned long arcDurationMs = 0;
-static bool arcAnimating = false;
+static int cachedTimerDurationS = TIMER_DEFAULT_SECONDS;
 
 /* Pressure display mode */
 static bool showBar = false;
@@ -180,25 +180,20 @@ void ui_handle_command(const UICommand &cmd)
                 case AppState::IDLE:
                     set_calibrating_overlay(false);
                     set_idle_colors();
-                    arcAnimating = false;
                     lv_arc_set_value(ui_get_timer_arc(), 0);
                     break;
                 case AppState::CALIBRATING: set_calibrating_overlay(true); break;
-                case AppState::TIMING:      set_timing_colors();          break;
+                case AppState::TIMING:
+                    set_timing_colors();
+                    arcStartMs    = millis();
+                    arcDurationMs = (unsigned long)cachedTimerDurationS * 1000UL;
+                    lv_arc_set_value(ui_get_timer_arc(), 0);
+                    break;
                 case AppState::ALERT:
                     set_alert_colors();
-                    arcAnimating = false;
                     lv_arc_set_value(ui_get_timer_arc(), 100);
                     break;
             }
-            break;
-        }
-
-        case UICommandType::START_ARC_ANIM: {
-            arcStartMs    = millis();
-            arcDurationMs = (unsigned long)cmd.durationMs;
-            arcAnimating  = true;
-            lv_arc_set_value(ui_get_timer_arc(), 0);
             break;
         }
 
@@ -211,6 +206,7 @@ void ui_handle_command(const UICommand &cmd)
 
 void ui_update_timer_setting(int durationSeconds)
 {
+    cachedTimerDurationS = durationSeconds;
     char buf[24];
     snprintf(buf, sizeof(buf), "Timer: %ds", durationSeconds);
     lv_label_set_text(ui_get_timer_setting_label(), buf);
@@ -221,12 +217,12 @@ void ui_arc_tick()
     /* Always run blink effect (not just on queue messages) */
     alert_blink_tick();
 
-    if (!arcAnimating && currentState != AppState::ALERT) return;
+    if (currentState != AppState::TIMING && currentState != AppState::ALERT) return;
 
     unsigned long elapsed = millis() - arcStartMs;
 
     /* Update arc (only during TIMING) */
-    if (arcAnimating) {
+    if (currentState == AppState::TIMING) {
         int percent;
         if (arcDurationMs == 0) {
             percent = 100;

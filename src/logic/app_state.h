@@ -28,7 +28,6 @@ enum class UICommandType : uint8_t {
     UPDATE_PRESSURE,      // Update pressure display
     UPDATE_TIMER,         // Update timer display
     UPDATE_STATE,         // State transition
-    START_ARC_ANIM,       // Start arc animation (sends durationMs)
     UPDATE_TIMER_SETTING, // Update "Timer: Xs" setting label
 };
 
@@ -38,7 +37,6 @@ struct UICommand {
         float    pressure;          // For UPDATE_PRESSURE
         int      timerSeconds;      // For UPDATE_TIMER / UPDATE_TIMER_SETTING
         AppState state;             // For UPDATE_STATE
-        int      durationMs;        // For START_ARC_ANIM
     };
 };
 

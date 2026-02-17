@@ -168,20 +168,6 @@ static void logicTask(void *pvParam)
                 loadcell_request_tare();
             }
             timer.processAction(action);
-
-            /* Update timer setting label after +/- press */
-            if (action.type == UserActionType::TIMER_INCREMENT ||
-                action.type == UserActionType::TIMER_DECREMENT) {
-                UICommand cmd;
-                cmd.type         = UICommandType::UPDATE_TIMER;
-                cmd.timerSeconds = timer.getTimerDuration();
-                xQueueSend(uiQueue, &cmd, 0);
-
-                UICommand setCmd;
-                setCmd.type         = UICommandType::UPDATE_TIMER_SETTING;
-                setCmd.timerSeconds = timer.getTimerDuration();
-                xQueueSend(uiQueue, &setCmd, 0);
-            }
         }
 
         /* Tick the state machine (countdown updates) */

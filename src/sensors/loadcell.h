@@ -23,18 +23,6 @@ bool loadcell_read(float &pressure);
 void loadcell_request_tare();
 
 /**
- * Check if a tare has been requested.
- * Called internally by the sensor task.
- */
-bool loadcell_tare_pending();
-
-/**
- * Check if a tare operation is currently in progress.
- * Safe to call from any task.
- */
-bool loadcell_tare_active();
-
-/**
  * Execute the tare operation (blocking, ~1s).
  */
 void loadcell_do_tare();

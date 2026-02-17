@@ -62,6 +62,7 @@ void PressTimer::processAction(const UserAction &action)
             if (timerDuration_ > TIMER_MAX_SECONDS)
                 timerDuration_ = TIMER_MAX_SECONDS;
             updateTimerDisplay();
+            sendTimerSettingUpdate();
             break;
 
         case UserActionType::TIMER_DECREMENT:
@@ -69,6 +70,7 @@ void PressTimer::processAction(const UserAction &action)
             if (timerDuration_ < TIMER_MIN_SECONDS)
                 timerDuration_ = TIMER_MIN_SECONDS;
             updateTimerDisplay();
+            sendTimerSettingUpdate();
             break;
 
         case UserActionType::ACKNOWLEDGE_ALERT:
@@ -108,17 +110,6 @@ void PressTimer::transitionTo(AppState newState)
     if (newState == AppState::IDLE) {
         timerRemaining_ = timerDuration_;
         updateTimerDisplay();
-        /* Arc reset is handled by UI on state change */
-    }
-
-    if (newState == AppState::TIMING) {
-        updateTimerDisplay();
-
-        /* Tell UI to start arc animation over the full duration */
-        UICommand arcCmd;
-        arcCmd.type       = UICommandType::START_ARC_ANIM;
-        arcCmd.durationMs = timerDuration_ * 1000;
-        sendUICommand(arcCmd);
     }
 }
 
@@ -132,8 +123,14 @@ void PressTimer::updateTimerDisplay()
 {
     UICommand cmd;
     cmd.type         = UICommandType::UPDATE_TIMER;
-    cmd.timerSeconds = (state_ == AppState::TIMING || state_ == AppState::ALERT)
-                        ? timerRemaining_
-                        : timerDuration_;
+    cmd.timerSeconds = timerDuration_;
+    sendUICommand(cmd);
+}
+
+void PressTimer::sendTimerSettingUpdate()
+{
+    UICommand cmd;
+    cmd.type         = UICommandType::UPDATE_TIMER_SETTING;
+    cmd.timerSeconds = timerDuration_;
     sendUICommand(cmd);
 }
