@@ -12,6 +12,11 @@ static AppState currentState = AppState::IDLE;
 static bool alertBlinkOn = false;
 static unsigned long lastBlinkMs = 0;
 
+/* Arc animation state (local to UI task for smooth updates) */
+static unsigned long arcStartMs  = 0;
+static unsigned long arcDurationMs = 0;
+static bool arcAnimating = false;
+
 /* ── State color helpers ─────────────────────────────────── */
 
 static void set_idle_colors()
@@ -123,16 +128,27 @@ void ui_handle_command(const UICommand &cmd)
         case UICommandType::UPDATE_STATE: {
             currentState = cmd.state;
             switch (cmd.state) {
-                case AppState::IDLE:     set_idle_colors();     break;
+                case AppState::IDLE:
+                    set_idle_colors();
+                    arcAnimating = false;
+                    lv_arc_set_value(ui_get_timer_arc(), 0);
+                    break;
                 case AppState::PRESSING: set_pressing_colors(); break;
                 case AppState::TIMING:   set_timing_colors();   break;
-                case AppState::ALERT:    set_alert_colors();    break;
+                case AppState::ALERT:
+                    set_alert_colors();
+                    arcAnimating = false;
+                    lv_arc_set_value(ui_get_timer_arc(), 100);
+                    break;
             }
             break;
         }
 
-        case UICommandType::UPDATE_ARC: {
-            lv_arc_set_value(ui_get_timer_arc(), cmd.arcPercent);
+        case UICommandType::START_ARC_ANIM: {
+            arcStartMs    = millis();
+            arcDurationMs = (unsigned long)cmd.durationMs;
+            arcAnimating  = true;
+            lv_arc_set_value(ui_get_timer_arc(), 0);
             break;
         }
 
@@ -151,4 +167,20 @@ void ui_update_timer_setting(int durationSeconds)
     char buf[24];
     snprintf(buf, sizeof(buf), "Timer: %ds", durationSeconds);
     lv_label_set_text(ui_get_timer_setting_label(), buf);
+}
+
+void ui_arc_tick()
+{
+    if (!arcAnimating) return;
+
+    unsigned long elapsed = millis() - arcStartMs;
+    int percent;
+    if (arcDurationMs == 0) {
+        percent = 100;
+    } else {
+        percent = (int)((elapsed * 100UL) / arcDurationMs);
+    }
+    if (percent > 100) percent = 100;
+
+    lv_arc_set_value(ui_get_timer_arc(), percent);
 }

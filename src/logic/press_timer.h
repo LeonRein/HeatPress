@@ -37,7 +37,6 @@ private:
     void transitionTo(AppState newState);
     void sendUICommand(const UICommand &cmd);
     void updateTimerDisplay();
-    void updateArc();
 
     QueueHandle_t uiQueue_;
     QueueHandle_t actionQueue_;

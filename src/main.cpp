@@ -47,6 +47,9 @@ static void uiTask(void *pvParam)
             ui_handle_command(cmd);
         }
 
+        /* Smooth arc animation (local timing, every frame) */
+        ui_arc_tick();
+
         /* Drive LVGL (rendering, animations, input) */
         lv_setup_update();
 

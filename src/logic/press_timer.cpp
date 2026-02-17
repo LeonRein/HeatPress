@@ -99,7 +99,6 @@ void PressTimer::tick()
         }
 
         updateTimerDisplay();
-        updateArc();
     }
 
     if (state_ == AppState::ALERT) {
@@ -125,15 +124,17 @@ void PressTimer::transitionTo(AppState newState)
     if (newState == AppState::IDLE) {
         timerRemaining_ = timerDuration_;
         updateTimerDisplay();
-
-        UICommand arcCmd;
-        arcCmd.type       = UICommandType::UPDATE_ARC;
-        arcCmd.arcPercent = 0;
-        sendUICommand(arcCmd);
+        /* Arc reset is handled by UI on state change */
     }
 
     if (newState == AppState::TIMING) {
         updateTimerDisplay();
+
+        /* Tell UI to start arc animation over the full duration */
+        UICommand arcCmd;
+        arcCmd.type       = UICommandType::START_ARC_ANIM;
+        arcCmd.durationMs = timerDuration_ * 1000;
+        sendUICommand(arcCmd);
     }
 }
 
@@ -150,21 +151,5 @@ void PressTimer::updateTimerDisplay()
     cmd.timerSeconds = (state_ == AppState::TIMING || state_ == AppState::ALERT)
                         ? timerRemaining_
                         : timerDuration_;
-    sendUICommand(cmd);
-}
-
-void PressTimer::updateArc()
-{
-    if (timerDuration_ <= 0) return;
-
-    unsigned long elapsedMs = millis() - timerStartMs_;
-    unsigned long durationMs = (unsigned long)timerDuration_ * 1000UL;
-    int percent = (int)((elapsedMs * 100UL) / durationMs);
-    if (percent > 100) percent = 100;
-    if (percent > 100) percent = 100;
-
-    UICommand cmd;
-    cmd.type       = UICommandType::UPDATE_ARC;
-    cmd.arcPercent = percent;
     sendUICommand(cmd);
 }

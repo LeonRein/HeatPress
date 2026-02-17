@@ -15,4 +15,10 @@ void ui_handle_command(const UICommand &cmd);
  */
 void ui_update_timer_setting(int durationSeconds);
 
+/**
+ * Call every UI frame to smoothly animate the arc.
+ * Uses local timing for jitter-free 30fps updates.
+ */
+void ui_arc_tick();
+
 #endif /* UI_UPDATE_H */
