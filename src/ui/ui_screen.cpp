@@ -78,35 +78,10 @@ void ui_screen_create(QueueHandle_t actionQueue)
     /* Click handler for alert dismissal */
     lv_obj_add_event_cb(scr, screen_click_cb, LV_EVENT_CLICKED, nullptr);
 
-    /* ── Pressure card (top area) ──────────────────── */
-    pressure_card = lv_obj_create(scr);
-    lv_obj_add_style(pressure_card, &style_card, 0);
-    lv_obj_set_size(pressure_card, 190, 80);
-    lv_obj_align(pressure_card, LV_ALIGN_TOP_LEFT, 10, 10);
-    lv_obj_clear_flag(pressure_card, LV_OBJ_FLAG_SCROLLABLE);
-
-    /* Pressure value */
-    pressure_label = lv_label_create(pressure_card);
-    lv_obj_add_style(pressure_label, &style_label_large, 0);
-    lv_label_set_text(pressure_label, "0.0");
-    lv_obj_align(pressure_label, LV_ALIGN_LEFT_MID, 0, -6);
-
-    /* Unit label */
-    pressure_unit = lv_label_create(pressure_card);
-    lv_obj_add_style(pressure_unit, &style_label_small, 0);
-    lv_label_set_text(pressure_unit, "grams");
-    lv_obj_align(pressure_unit, LV_ALIGN_BOTTOM_LEFT, 2, 0);
-
-    /* ── Status label (below pressure card) ───────── */
-    status_label = lv_label_create(scr);
-    lv_obj_add_style(status_label, &style_label_small, 0);
-    lv_label_set_text(status_label, "IDLE");
-    lv_obj_align(status_label, LV_ALIGN_TOP_LEFT, 20, 96);
-
-    /* ── Timer arc (right side) ───────────────────── */
+    /* ── Timer arc (left side, hero element) ──────── */
     timer_arc = lv_arc_create(scr);
-    lv_obj_set_size(timer_arc, 100, 100);
-    lv_obj_align(timer_arc, LV_ALIGN_TOP_RIGHT, -10, 8);
+    lv_obj_set_size(timer_arc, 140, 140);
+    lv_obj_align(timer_arc, LV_ALIGN_TOP_LEFT, 12, 18);
     lv_arc_set_rotation(timer_arc, 270);
     lv_arc_set_bg_angles(timer_arc, 0, 360);
     lv_arc_set_range(timer_arc, 0, 100);
@@ -117,23 +92,58 @@ void ui_screen_create(QueueHandle_t actionQueue)
     /* Arc colors */
     lv_obj_set_style_arc_color(timer_arc, COLOR_SURFACE, LV_PART_MAIN);
     lv_obj_set_style_arc_color(timer_arc, COLOR_PRIMARY, LV_PART_INDICATOR);
-    lv_obj_set_style_arc_width(timer_arc, 8, LV_PART_MAIN);
-    lv_obj_set_style_arc_width(timer_arc, 8, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(timer_arc, 10, LV_PART_MAIN);
+    lv_obj_set_style_arc_width(timer_arc, 10, LV_PART_INDICATOR);
     lv_obj_set_style_arc_rounded(timer_arc, true, LV_PART_INDICATOR);
 
     /* Timer text inside arc */
     timer_label = lv_label_create(timer_arc);
-    lv_obj_add_style(timer_label, &style_label_medium, 0);
+    lv_obj_add_style(timer_label, &style_label_large, 0);
     char buf[8];
     snprintf(buf, sizeof(buf), "%d", TIMER_DEFAULT_SECONDS);
     lv_label_set_text(timer_label, buf);
-    lv_obj_center(timer_label);
+    lv_obj_align(timer_label, LV_ALIGN_CENTER, 0, -4);
 
     /* Timer "sec" subtitle */
     lv_obj_t *sec_label = lv_label_create(timer_arc);
     lv_obj_add_style(sec_label, &style_label_small, 0);
     lv_label_set_text(sec_label, "sec");
-    lv_obj_align(sec_label, LV_ALIGN_CENTER, 0, 16);
+    lv_obj_align(sec_label, LV_ALIGN_CENTER, 0, 20);
+
+    /* ── Right side info panel ────────────────────── */
+
+    /* Pressure card */
+    pressure_card = lv_obj_create(scr);
+    lv_obj_add_style(pressure_card, &style_card, 0);
+    lv_obj_set_size(pressure_card, 140, 70);
+    lv_obj_align(pressure_card, LV_ALIGN_TOP_RIGHT, -10, 18);
+    lv_obj_clear_flag(pressure_card, LV_OBJ_FLAG_SCROLLABLE);
+
+    /* Pressure value */
+    pressure_label = lv_label_create(pressure_card);
+    lv_obj_add_style(pressure_label, &style_label_medium, 0);
+    lv_label_set_text(pressure_label, "0.0");
+    lv_obj_align(pressure_label, LV_ALIGN_LEFT_MID, 0, -8);
+
+    /* Unit label */
+    pressure_unit = lv_label_create(pressure_card);
+    lv_obj_add_style(pressure_unit, &style_label_small, 0);
+    lv_label_set_text(pressure_unit, "grams");
+    lv_obj_align(pressure_unit, LV_ALIGN_BOTTOM_LEFT, 2, 0);
+
+    /* Status label (right side, below pressure card) */
+    status_label = lv_label_create(scr);
+    lv_obj_add_style(status_label, &style_label_small, 0);
+    lv_label_set_text(status_label, "IDLE");
+    lv_obj_align(status_label, LV_ALIGN_TOP_RIGHT, -20, 104);
+
+    /* Timer setting label (right side, below status) */
+    timer_set_label = lv_label_create(scr);
+    lv_obj_add_style(timer_set_label, &style_label_small, 0);
+    char setbuf[24];
+    snprintf(setbuf, sizeof(setbuf), "Timer: %ds", TIMER_DEFAULT_SECONDS);
+    lv_label_set_text(timer_set_label, setbuf);
+    lv_obj_align(timer_set_label, LV_ALIGN_TOP_RIGHT, -20, 126);
 
     /* ── Bottom button row ────────────────────────── */
     lv_obj_t *btn_row = lv_obj_create(scr);
@@ -157,14 +167,6 @@ void ui_screen_create(QueueHandle_t actionQueue)
 
     btn_tare = create_btn(btn_row, "TARE", btn_tare_cb, true);
     lv_obj_set_size(btn_tare, 90, 42);
-
-    /* ── Timer setting label (between status and buttons) ── */
-    timer_set_label = lv_label_create(scr);
-    lv_obj_add_style(timer_set_label, &style_label_small, 0);
-    char setbuf[24];
-    snprintf(setbuf, sizeof(setbuf), "Timer: %ds", TIMER_DEFAULT_SECONDS);
-    lv_label_set_text(timer_set_label, setbuf);
-    lv_obj_align(timer_set_label, LV_ALIGN_LEFT_MID, 20, 20);
 }
 
 /* ── Getters ─────────────────────────────────────────────── */
