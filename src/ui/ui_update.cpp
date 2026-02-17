@@ -200,7 +200,7 @@ void ui_arc_tick()
             if (mins > 0) {
                 snprintf(buf, sizeof(buf), "+%d:%02d", mins, secs);
             } else {
-                snprintf(buf, sizeof(buf), "+%ds", secs);
+                snprintf(buf, sizeof(buf), "+%d", secs);
             }
         } else {
             int totalSec = (int)(remainingMs / 1000);
@@ -209,7 +209,7 @@ void ui_arc_tick()
             if (mins > 0) {
                 snprintf(buf, sizeof(buf), "%d:%02d", mins, secs);
             } else {
-                snprintf(buf, sizeof(buf), "%ds", secs);
+                snprintf(buf, sizeof(buf), "%d", secs);
             }
         }
         lv_label_set_text(ui_get_timer_label(), buf);
