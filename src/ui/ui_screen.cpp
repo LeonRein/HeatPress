@@ -7,7 +7,8 @@
 static lv_obj_t *scr             = nullptr;
 static lv_obj_t *pressure_card   = nullptr;
 static lv_obj_t *pressure_label  = nullptr;
-static lv_obj_t *pressure_unit   = nullptr;
+static lv_obj_t *pressure_unit_kg = nullptr;
+static lv_obj_t *pressure_unit_bar = nullptr;
 static lv_obj_t *status_label    = nullptr;
 static lv_obj_t *timer_arc       = nullptr;
 static lv_obj_t *timer_label     = nullptr;
@@ -43,6 +44,13 @@ static void screen_click_cb(lv_event_t *e)
     /* Clicking anywhere dismisses alert */
     UserAction action = { UserActionType::ACKNOWLEDGE_ALERT };
     xQueueSend(s_actionQueue, &action, 0);
+}
+
+static void pressure_card_click_cb(lv_event_t *e)
+{
+    /* Forward to ui_update to toggle display mode */
+    extern void ui_toggle_pressure_unit();
+    ui_toggle_pressure_unit();
 }
 
 /* ── Helper: create a material button ────────────────────── */
@@ -112,24 +120,34 @@ void ui_screen_create(QueueHandle_t actionQueue)
 
     /* ── Right side info panel ────────────────────── */
 
-    /* Pressure card */
+    /* Pressure card (clickable to toggle kg/bar) */
     pressure_card = lv_obj_create(scr);
     lv_obj_add_style(pressure_card, &style_card, 0);
     lv_obj_set_size(pressure_card, 140, 70);
     lv_obj_align(pressure_card, LV_ALIGN_TOP_RIGHT, -10, 18);
     lv_obj_clear_flag(pressure_card, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(pressure_card, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(pressure_card, pressure_card_click_cb, LV_EVENT_CLICKED, nullptr);
 
     /* Pressure value */
     pressure_label = lv_label_create(pressure_card);
     lv_obj_add_style(pressure_label, &style_label_medium, 0);
     lv_label_set_text(pressure_label, "0.0");
-    lv_obj_align(pressure_label, LV_ALIGN_LEFT_MID, 0, -8);
+    lv_obj_align(pressure_label, LV_ALIGN_CENTER, 0, -6);
 
-    /* Unit label */
-    pressure_unit = lv_label_create(pressure_card);
-    lv_obj_add_style(pressure_unit, &style_label_small, 0);
-    lv_label_set_text(pressure_unit, "kg");
-    lv_obj_align(pressure_unit, LV_ALIGN_BOTTOM_LEFT, 2, 0);
+    /* Unit label: kg (bottom-left, active) */
+    pressure_unit_kg = lv_label_create(pressure_card);
+    lv_obj_add_style(pressure_unit_kg, &style_label_small, 0);
+    lv_label_set_text(pressure_unit_kg, "kg");
+    lv_obj_align(pressure_unit_kg, LV_ALIGN_BOTTOM_LEFT, 2, 0);
+    lv_obj_set_style_text_color(pressure_unit_kg, COLOR_ON_SURFACE, 0);
+
+    /* Unit label: bar (bottom-right, dimmed) */
+    pressure_unit_bar = lv_label_create(pressure_card);
+    lv_obj_add_style(pressure_unit_bar, &style_label_small, 0);
+    lv_label_set_text(pressure_unit_bar, "mbar");
+    lv_obj_align(pressure_unit_bar, LV_ALIGN_BOTTOM_RIGHT, -2, 0);
+    lv_obj_set_style_text_color(pressure_unit_bar, COLOR_DIMMED, 0);
 
     /* Status label (right side, below pressure card) */
     status_label = lv_label_create(scr);
@@ -177,3 +195,5 @@ lv_obj_t* ui_get_timer_arc()           { return timer_arc; }
 lv_obj_t* ui_get_pressure_card()       { return pressure_card; }
 lv_obj_t* ui_get_status_label()        { return status_label; }
 lv_obj_t* ui_get_timer_setting_label() { return timer_set_label; }
+lv_obj_t* ui_get_pressure_unit_kg()    { return pressure_unit_kg; }
+lv_obj_t* ui_get_pressure_unit_bar()   { return pressure_unit_bar; }

@@ -21,4 +21,10 @@ void ui_update_timer_setting(int durationSeconds);
  */
 void ui_arc_tick();
 
+/**
+ * Toggle pressure display between kg and bar.
+ * Called from the pressure card click handler.
+ */
+void ui_toggle_pressure_unit();
+
 #endif /* UI_UPDATE_H */

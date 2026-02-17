@@ -20,5 +20,7 @@ lv_obj_t* ui_get_timer_arc();
 lv_obj_t* ui_get_pressure_card();
 lv_obj_t* ui_get_status_label();
 lv_obj_t* ui_get_timer_setting_label();
+lv_obj_t* ui_get_pressure_unit_kg();
+lv_obj_t* ui_get_pressure_unit_bar();
 
 #endif /* UI_SCREEN_H */

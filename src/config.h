@@ -28,6 +28,12 @@
 #define SENSOR_READ_INTERVAL_MS 100   /* 10 Hz sensor polling */
 
 /*====================
+   PRESS AREA (for bar calculation)
+ *====================*/
+#define PRESS_AREA_WIDTH_MM     300.0f  /* press plate width in mm */
+#define PRESS_AREA_HEIGHT_MM    380.0f  /* press plate height in mm */
+
+/*====================
    PRESSURE / TIMER
  *====================*/
 #define PRESSURE_THRESHOLD      50.0f   /* grams to trigger "pressing" */
