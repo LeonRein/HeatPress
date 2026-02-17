@@ -157,8 +157,10 @@ void PressTimer::updateArc()
 {
     if (timerDuration_ <= 0) return;
 
-    int elapsed = timerDuration_ - timerRemaining_;
-    int percent = (elapsed * 100) / timerDuration_;
+    unsigned long elapsedMs = millis() - timerStartMs_;
+    unsigned long durationMs = (unsigned long)timerDuration_ * 1000UL;
+    int percent = (int)((elapsedMs * 100UL) / durationMs);
+    if (percent > 100) percent = 100;
     if (percent > 100) percent = 100;
 
     UICommand cmd;
