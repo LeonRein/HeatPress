@@ -89,7 +89,7 @@ void ui_handle_command(const UICommand &cmd)
     switch (cmd.type) {
         case UICommandType::UPDATE_PRESSURE: {
             char buf[16];
-            snprintf(buf, sizeof(buf), "%.1f", cmd.pressure);
+            snprintf(buf, sizeof(buf), "%.2f", cmd.pressure / 1000.0f);
             lv_label_set_text(ui_get_pressure_label(), buf);
             break;
         }

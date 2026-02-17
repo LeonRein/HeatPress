@@ -31,7 +31,7 @@
    PRESSURE / TIMER
  *====================*/
 #define PRESSURE_THRESHOLD      50.0f   /* grams to trigger "pressing" */
-#define TIMER_DEFAULT_SECONDS   30      /* default countdown duration */
+#define TIMER_DEFAULT_SECONDS   15      /* default countdown duration */
 #define TIMER_MIN_SECONDS       5       /* minimum timer setting */
 #define TIMER_MAX_SECONDS       300     /* maximum timer setting */
 #define TIMER_STEP_SECONDS      5       /* +/- button increment */

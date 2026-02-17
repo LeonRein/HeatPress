@@ -128,7 +128,7 @@ void ui_screen_create(QueueHandle_t actionQueue)
     /* Unit label */
     pressure_unit = lv_label_create(pressure_card);
     lv_obj_add_style(pressure_unit, &style_label_small, 0);
-    lv_label_set_text(pressure_unit, "grams");
+    lv_label_set_text(pressure_unit, "kg");
     lv_obj_align(pressure_unit, LV_ALIGN_BOTTOM_LEFT, 2, 0);
 
     /* Status label (right side, below pressure card) */
