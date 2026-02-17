@@ -8,18 +8,21 @@ PressTimer::PressTimer(QueueHandle_t uiQueue, QueueHandle_t actionQueue)
     , timerDuration_(TIMER_DEFAULT_SECONDS)
     , timerRemaining_(TIMER_DEFAULT_SECONDS)
 {
-    lastTickMs_ = millis();
 }
 
 void PressTimer::processPressure(float pressure)
 {
     currentPressure_ = pressure;
 
-    /* Send pressure to UI */
-    UICommand cmd;
-    cmd.type     = UICommandType::UPDATE_PRESSURE;
-    cmd.pressure = pressure;
-    sendUICommand(cmd);
+    /* Only send pressure to UI if the displayed value (2 decimal kg) changed */
+    int displayVal = (int)(pressure / 10.0f); /* 0.01 kg resolution */
+    if (displayVal != lastDisplayPressure_) {
+        lastDisplayPressure_ = displayVal;
+        UICommand cmd;
+        cmd.type     = UICommandType::UPDATE_PRESSURE;
+        cmd.pressure = pressure;
+        sendUICommand(cmd);
+    }
 
     bool aboveThreshold = (pressure > PRESSURE_THRESHOLD);
 
@@ -86,27 +89,15 @@ void PressTimer::processAction(const UserAction &action)
 
 void PressTimer::tick()
 {
-    unsigned long now = millis();
-
     if (state_ == AppState::TIMING) {
-        unsigned long elapsed = now - timerStartMs_;
+        unsigned long elapsed = millis() - timerStartMs_;
         int elapsedSeconds    = (int)(elapsed / 1000);
-        timerRemaining_       = timerDuration_ - elapsedSeconds;
 
-        if (timerRemaining_ <= 0) {
+        if (elapsedSeconds >= timerDuration_) {
             timerRemaining_ = timerDuration_ - elapsedSeconds;
             transitionTo(AppState::ALERT);
         }
     }
-
-    if (state_ == AppState::ALERT) {
-        /* Keep counting overtime */
-        unsigned long elapsed = now - timerStartMs_;
-        int elapsedSeconds    = (int)(elapsed / 1000);
-        timerRemaining_       = timerDuration_ - elapsedSeconds;
-    }
-
-    lastTickMs_ = now;
 }
 
 void PressTimer::transitionTo(AppState newState)

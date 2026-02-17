@@ -157,9 +157,6 @@ void ui_handle_command(const UICommand &cmd)
             break;
         }
     }
-
-    /* Run blink effect if in alert state */
-    alert_blink_tick();
 }
 
 void ui_update_timer_setting(int durationSeconds)
@@ -171,6 +168,9 @@ void ui_update_timer_setting(int durationSeconds)
 
 void ui_arc_tick()
 {
+    /* Always run blink effect (not just on queue messages) */
+    alert_blink_tick();
+
     if (!arcAnimating && currentState != AppState::ALERT) return;
 
     unsigned long elapsed = millis() - arcStartMs;
@@ -187,32 +187,29 @@ void ui_arc_tick()
         lv_arc_set_value(ui_get_timer_arc(), percent);
     }
 
-    /* Update timer text with tenths of seconds */
+    /* Update timer text (whole seconds) */
     if (currentState == AppState::TIMING || currentState == AppState::ALERT) {
         long remainingMs = (long)arcDurationMs - (long)elapsed;
         char buf[16];
 
         if (remainingMs < 0) {
             /* Overtime */
-            long overMs = -remainingMs;
-            int overSec = (int)(overMs / 1000);
-            int overTenths = (int)((overMs % 1000) / 100);
+            int overSec = (int)(-remainingMs / 1000);
             int mins = overSec / 60;
             int secs = overSec % 60;
             if (mins > 0) {
-                snprintf(buf, sizeof(buf), "+%d:%02d.%d", mins, secs, overTenths);
+                snprintf(buf, sizeof(buf), "+%d:%02d", mins, secs);
             } else {
-                snprintf(buf, sizeof(buf), "+%d.%d", secs, overTenths);
+                snprintf(buf, sizeof(buf), "+%ds", secs);
             }
         } else {
             int totalSec = (int)(remainingMs / 1000);
-            int tenths   = (int)((remainingMs % 1000) / 100);
             int mins = totalSec / 60;
             int secs = totalSec % 60;
             if (mins > 0) {
-                snprintf(buf, sizeof(buf), "%d:%02d.%d", mins, secs, tenths);
+                snprintf(buf, sizeof(buf), "%d:%02d", mins, secs);
             } else {
-                snprintf(buf, sizeof(buf), "%d.%d", secs, tenths);
+                snprintf(buf, sizeof(buf), "%ds", secs);
             }
         }
         lv_label_set_text(ui_get_timer_label(), buf);

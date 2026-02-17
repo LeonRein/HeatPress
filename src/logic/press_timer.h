@@ -45,9 +45,9 @@ private:
     int      timerDuration_   = 0;   /* Set from config on construction */
     int      timerRemaining_  = 0;
     float    currentPressure_ = 0.0f;
+    int      lastDisplayPressure_ = -1; /* tracks displayed value to avoid redundant updates */
 
     unsigned long timerStartMs_  = 0;
-    unsigned long lastTickMs_    = 0;
 };
 
 #endif /* PRESS_TIMER_H */
