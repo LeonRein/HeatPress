@@ -7,6 +7,13 @@
 #define PIN_HX711_DT   27
 #define PIN_HX711_CLK  22
 
+/* XPT2046 touch controller (separate VSPI bus) */
+#define PIN_XPT2046_IRQ   36
+#define PIN_XPT2046_MOSI  32
+#define PIN_XPT2046_MISO  39
+#define PIN_XPT2046_CLK   25
+#define PIN_XPT2046_CS    33
+
 /*====================
    DISPLAY
  *====================*/

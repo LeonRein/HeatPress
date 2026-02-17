@@ -1,12 +1,18 @@
 #include "lv_setup.h"
 
+#include <SPI.h>
 #include <TFT_eSPI.h>
+#include <XPT2046_Touchscreen.h>
 #include <lvgl.h>
 #include "../config.h"
 
-/* ── TFT + LVGL internals ────────────────────────────────── */
+/* ── TFT + Touch + LVGL internals ────────────────────────── */
 
 static TFT_eSPI tft = TFT_eSPI();
+
+/* XPT2046 on its own VSPI bus */
+static SPIClass touchSpi = SPIClass(VSPI);
+static XPT2046_Touchscreen ts(PIN_XPT2046_CS, PIN_XPT2046_IRQ);
 
 /* Double-buffered: two 320×20 line buffers */
 static const uint32_t BUF_PX = SCREEN_WIDTH * 20;
@@ -32,17 +38,28 @@ static void tft_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *
     lv_disp_flush_ready(drv);
 }
 
-/* ── Touch read callback ─────────────────────────────────── */
+/* ── Touch read callback (XPT2046) ───────────────────────── */
 
 static void touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data)
 {
-    uint16_t tx, ty;
-    bool pressed = tft.getTouch(&tx, &ty, 40);
+    if (ts.tirqTouched() && ts.touched()) {
+        TS_Point p = ts.getPoint();
 
-    if (pressed) {
-        data->state = LV_INDEV_STATE_PRESSED;
-        data->point.x = tx;
-        data->point.y = ty;
+        /* Map raw XPT2046 coordinates to screen pixels.
+         * Raw range is roughly 200..3800 for both axes.
+         * Landscape rotation 1: raw X → screen X, raw Y → screen Y */
+        int16_t sx = map(p.x, 200, 3800, 0, SCREEN_WIDTH  - 1);
+        int16_t sy = map(p.y, 200, 3800, 0, SCREEN_HEIGHT - 1);
+
+        /* Clamp to screen bounds */
+        if (sx < 0) sx = 0;
+        if (sx >= SCREEN_WIDTH)  sx = SCREEN_WIDTH  - 1;
+        if (sy < 0) sy = 0;
+        if (sy >= SCREEN_HEIGHT) sy = SCREEN_HEIGHT - 1;
+
+        data->state   = LV_INDEV_STATE_PRESSED;
+        data->point.x = sx;
+        data->point.y = sy;
     } else {
         data->state = LV_INDEV_STATE_RELEASED;
     }
@@ -52,16 +69,16 @@ static void touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data)
 
 void lv_setup_init()
 {
-    /* Initialize TFT */
+    /* Initialize TFT display */
     tft.init();
     tft.setRotation(1);  /* Landscape */
     tft.fillScreen(TFT_BLACK);
 
-    /* Touch calibration for CYD (landscape).
-     * These values may need adjustment for your specific display.
-     * Format: calData[5] = { x_min, x_max, y_min, y_max, orientation } */
-    uint16_t calData[5] = { 300, 3600, 300, 3600, 1 };
-    tft.setTouch(calData);
+    /* Initialize XPT2046 touch on VSPI */
+    touchSpi.begin(PIN_XPT2046_CLK, PIN_XPT2046_MISO,
+                   PIN_XPT2046_MOSI, PIN_XPT2046_CS);
+    ts.begin(touchSpi);
+    ts.setRotation(1);
 
     /* Initialize LVGL */
     lv_init();
