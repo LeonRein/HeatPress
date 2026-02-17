@@ -96,13 +96,25 @@ void ui_handle_command(const UICommand &cmd)
 
         case UICommandType::UPDATE_TIMER: {
             int secs = cmd.timerSeconds;
-            int mins = secs / 60;
-            int remainder = secs % 60;
-            char buf[8];
-            if (mins > 0) {
-                snprintf(buf, sizeof(buf), "%d:%02d", mins, remainder);
+            char buf[12];
+            if (secs < 0) {
+                /* Overtime: show as +Xs */
+                int over = -secs;
+                int mins = over / 60;
+                int remainder = over % 60;
+                if (mins > 0) {
+                    snprintf(buf, sizeof(buf), "+%d:%02d", mins, remainder);
+                } else {
+                    snprintf(buf, sizeof(buf), "+%d", over);
+                }
             } else {
-                snprintf(buf, sizeof(buf), "%d", secs);
+                int mins = secs / 60;
+                int remainder = secs % 60;
+                if (mins > 0) {
+                    snprintf(buf, sizeof(buf), "%d:%02d", mins, remainder);
+                } else {
+                    snprintf(buf, sizeof(buf), "%d", secs);
+                }
             }
             lv_label_set_text(ui_get_timer_label(), buf);
             break;
