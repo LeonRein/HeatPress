@@ -94,11 +94,9 @@ void PressTimer::tick()
         timerRemaining_       = timerDuration_ - elapsedSeconds;
 
         if (timerRemaining_ <= 0) {
-            timerRemaining_ = timerDuration_ - elapsedSeconds; /* goes negative */
+            timerRemaining_ = timerDuration_ - elapsedSeconds;
             transitionTo(AppState::ALERT);
         }
-
-        updateTimerDisplay();
     }
 
     if (state_ == AppState::ALERT) {
@@ -106,7 +104,6 @@ void PressTimer::tick()
         unsigned long elapsed = now - timerStartMs_;
         int elapsedSeconds    = (int)(elapsed / 1000);
         timerRemaining_       = timerDuration_ - elapsedSeconds;
-        updateTimerDisplay();
     }
 
     lastTickMs_ = now;

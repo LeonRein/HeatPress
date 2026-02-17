@@ -171,16 +171,50 @@ void ui_update_timer_setting(int durationSeconds)
 
 void ui_arc_tick()
 {
-    if (!arcAnimating) return;
+    if (!arcAnimating && currentState != AppState::ALERT) return;
 
     unsigned long elapsed = millis() - arcStartMs;
-    int percent;
-    if (arcDurationMs == 0) {
-        percent = 100;
-    } else {
-        percent = (int)((elapsed * 100UL) / arcDurationMs);
-    }
-    if (percent > 100) percent = 100;
 
-    lv_arc_set_value(ui_get_timer_arc(), percent);
+    /* Update arc (only during TIMING) */
+    if (arcAnimating) {
+        int percent;
+        if (arcDurationMs == 0) {
+            percent = 100;
+        } else {
+            percent = (int)((elapsed * 100UL) / arcDurationMs);
+        }
+        if (percent > 100) percent = 100;
+        lv_arc_set_value(ui_get_timer_arc(), percent);
+    }
+
+    /* Update timer text with tenths of seconds */
+    if (currentState == AppState::TIMING || currentState == AppState::ALERT) {
+        long remainingMs = (long)arcDurationMs - (long)elapsed;
+        char buf[16];
+
+        if (remainingMs < 0) {
+            /* Overtime */
+            long overMs = -remainingMs;
+            int overSec = (int)(overMs / 1000);
+            int overTenths = (int)((overMs % 1000) / 100);
+            int mins = overSec / 60;
+            int secs = overSec % 60;
+            if (mins > 0) {
+                snprintf(buf, sizeof(buf), "+%d:%02d.%d", mins, secs, overTenths);
+            } else {
+                snprintf(buf, sizeof(buf), "+%d.%d", secs, overTenths);
+            }
+        } else {
+            int totalSec = (int)(remainingMs / 1000);
+            int tenths   = (int)((remainingMs % 1000) / 100);
+            int mins = totalSec / 60;
+            int secs = totalSec % 60;
+            if (mins > 0) {
+                snprintf(buf, sizeof(buf), "%d:%02d.%d", mins, secs, tenths);
+            } else {
+                snprintf(buf, sizeof(buf), "%d.%d", secs, tenths);
+            }
+        }
+        lv_label_set_text(ui_get_timer_label(), buf);
+    }
 }
