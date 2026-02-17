@@ -32,7 +32,7 @@ static void tft_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *
 
     tft.startWrite();
     tft.setAddrWindow(area->x1, area->y1, w, h);
-    tft.pushColors((uint16_t *)color_p, w * h, true);
+    tft.pushColors((uint16_t *)color_p, w * h, false);
     tft.endWrite();
 
     lv_disp_flush_ready(drv);
