@@ -19,6 +19,12 @@ bool loadcell_init()
     }
 
     LoadCell.setCalFactor(LOADCELL_CAL_FACTOR);
+
+    /* Reduce smoothing for fast response.
+     * Default is 16 samples (~1.6s lag at 10 SPS).
+     * Use 1 for instant response (no averaging). */
+    LoadCell.setSamplesInUse(1);
+
     return true;
 }
 
