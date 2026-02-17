@@ -207,6 +207,12 @@ void ui_handle_command(const UICommand &cmd)
 void ui_update_timer_setting(int durationSeconds)
 {
     cachedTimerDurationS = durationSeconds;
+
+    /* If timer is running, update arc duration so countdown/progress adjusts */
+    if (currentState == AppState::TIMING) {
+        arcDurationMs = (unsigned long)durationSeconds * 1000UL;
+    }
+
     char buf[24];
     snprintf(buf, sizeof(buf), "Timer: %ds", durationSeconds);
     lv_label_set_text(ui_get_timer_setting_label(), buf);
