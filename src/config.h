@@ -21,11 +21,21 @@
 #define SCREEN_HEIGHT  240
 
 /*====================
+   TOUCH CALIBRATION
+ *====================*/
+#define TOUCH_MIN_X    200      /* Raw XPT2046 X minimum */
+#define TOUCH_MAX_X    3700     /* Raw XPT2046 X maximum */
+#define TOUCH_MIN_Y    240      /* Raw XPT2046 Y minimum */
+#define TOUCH_MAX_Y    3800     /* Raw XPT2046 Y maximum */
+
+/*====================
    LOAD CELL
  *====================*/
 #define LOADCELL_CAL_FACTOR     200.0f
 #define LOADCELL_STABILIZE_MS   2000
-#define SENSOR_READ_INTERVAL_MS 100   /* 10 Hz sensor polling */
+#define LOADCELL_SAMPLES        1       /* HX711 smoothing (1 = no averaging) */
+#define LOADCELL_TARE_TIMEOUT_MS 2000   /* Max wait for tare completion */
+#define SENSOR_READ_INTERVAL_MS 100     /* 10 Hz sensor polling */
 
 /*====================
    PRESS AREA (for bar calculation)
@@ -41,6 +51,12 @@
 #define TIMER_MIN_SECONDS       5       /* minimum timer setting */
 #define TIMER_MAX_SECONDS       300     /* maximum timer setting */
 #define TIMER_STEP_SECONDS      5       /* +/- button increment */
+
+/*====================
+   ALERT
+ *====================*/
+#define ALERT_BLINK_INTERVAL_MS 500     /* Visual + audio blink period */
+#define LOGIC_TICK_INTERVAL_MS  100     /* State machine update rate */
 
 /*====================
    BUZZER / AUDIO

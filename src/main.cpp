@@ -177,7 +177,7 @@ static void logicTask(void *pvParam)
         /* Tick the state machine (countdown updates) */
         timer.tick();
 
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(LOGIC_TICK_INTERVAL_MS));
     }
 }
 

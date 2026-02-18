@@ -23,7 +23,7 @@ bool loadcell_init()
     /* Reduce smoothing for fast response.
      * Default is 16 samples (~1.6s lag at 10 SPS).
      * Use 1 for instant response (no averaging). */
-    LoadCell.setSamplesInUse(1);
+    LoadCell.setSamplesInUse(LOADCELL_SAMPLES);
 
     return true;
 }
@@ -55,7 +55,7 @@ void loadcell_do_tare()
     LoadCell.tareNoDelay();
     /* Wait for tare to complete */
     unsigned long start = millis();
-    while (!LoadCell.getTareStatus() && (millis() - start < 2000)) {
+    while (!LoadCell.getTareStatus() && (millis() - start < LOADCELL_TARE_TIMEOUT_MS)) {
         LoadCell.update();
         delay(10);
     }

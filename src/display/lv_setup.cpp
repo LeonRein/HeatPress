@@ -15,8 +15,8 @@ static SPIClass touchSpi = SPIClass(VSPI);
 static XPT2046_Touchscreen ts(PIN_XPT2046_CS, PIN_XPT2046_IRQ);
 
 /* Auto-calibration bounds (refined at runtime) */
-static uint16_t tsMinX = 300, tsMaxX = 3400;
-static uint16_t tsMinY = 400, tsMaxY = 3600;
+static uint16_t tsMinX = TOUCH_MIN_X, tsMaxX = TOUCH_MAX_X;
+static uint16_t tsMinY = TOUCH_MIN_Y, tsMaxY = TOUCH_MAX_Y;
 
 /* Double-buffered: two 320×20 line buffers */
 static const uint32_t BUF_PX = SCREEN_WIDTH * 20;

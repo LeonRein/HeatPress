@@ -132,7 +132,7 @@ static void alert_blink_tick()
     if (nextBlinkMs <= now) {
         alertBlinkOn = !alertBlinkOn;
         while (nextBlinkMs <= now) {
-            nextBlinkMs += 500;
+            nextBlinkMs += ALERT_BLINK_INTERVAL_MS;
         }
 
         if (alertBlinkOn) {
