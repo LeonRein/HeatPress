@@ -58,6 +58,9 @@ static int cachedTimerDurationS = TIMER_DEFAULT_SECONDS;
 
 /* Pressure display mode */
 static bool showBar = false;
+
+/* Mute state */
+static bool muted = false;
 static float lastPressureGrams = 0.0f;  /* cached for unit toggle */
 
 /* Format pressure value into buf based on current unit mode */
@@ -135,11 +138,11 @@ static void alert_blink_tick()
         if (alertBlinkOn) {
             lv_obj_set_style_bg_color(ui_get_pressure_card(), COLOR_ERROR, 0);
             lv_obj_set_style_bg_color(lv_scr_act(), COLOR_ALERT_BG, 0);
-            buzzer_on();
+            if (!muted) buzzer_on();
         } else {
             lv_obj_set_style_bg_color(ui_get_pressure_card(), lv_color_hex(0x4A0000), 0);
             lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x2A0000), 0);
-            buzzer_off();
+            if (!muted) buzzer_off();
         }
     }
 }
@@ -297,4 +300,20 @@ void ui_toggle_pressure_unit()
     char buf[16];
     format_pressure(lastPressureGrams, buf, sizeof(buf));
     lv_label_set_text(ui_get_pressure_label(), buf);
+}
+
+void ui_toggle_mute()
+{
+    muted = !muted;
+
+    /* Stop buzzer immediately when muting */
+    if (muted) {
+        buzzer_off();
+    }
+
+    /* Swap icon and color: speaker (black) ↔ muted speaker (red) */
+    lv_label_set_text(ui_get_mute_label(),
+                      muted ? LV_SYMBOL_MUTE : LV_SYMBOL_VOLUME_MAX);
+    lv_obj_set_style_text_color(ui_get_mute_label(),
+                                muted ? lv_color_hex(0xFF1744) : lv_color_hex(0x000000), 0);
 }

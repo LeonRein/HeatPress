@@ -16,6 +16,8 @@ static lv_obj_t *timer_set_label = nullptr;
 static lv_obj_t *btn_minus       = nullptr;
 static lv_obj_t *btn_plus        = nullptr;
 static lv_obj_t *btn_tare        = nullptr;
+static lv_obj_t *btn_mute        = nullptr;
+static lv_obj_t *btn_mute_label  = nullptr;
 
 static QueueHandle_t s_actionQueue = nullptr;
 
@@ -44,6 +46,12 @@ static void screen_click_cb(lv_event_t *e)
     /* Clicking anywhere dismisses alert */
     UserAction action = { UserActionType::ACKNOWLEDGE_ALERT };
     xQueueSend(s_actionQueue, &action, 0);
+}
+
+static void btn_mute_cb(lv_event_t *e)
+{
+    extern void ui_toggle_mute();
+    ui_toggle_mute();
 }
 
 static void pressure_card_click_cb(lv_event_t *e)
@@ -178,13 +186,17 @@ void ui_screen_create(QueueHandle_t actionQueue)
                           LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     btn_minus = create_btn(btn_row, LV_SYMBOL_MINUS " 5s", btn_minus_cb);
-    lv_obj_set_size(btn_minus, 80, 42);
+    lv_obj_set_size(btn_minus, 72, 42);
 
     btn_plus = create_btn(btn_row, LV_SYMBOL_PLUS " 5s", btn_plus_cb);
-    lv_obj_set_size(btn_plus, 80, 42);
+    lv_obj_set_size(btn_plus, 72, 42);
 
     btn_tare = create_btn(btn_row, "TARE", btn_tare_cb, true);
-    lv_obj_set_size(btn_tare, 90, 42);
+    lv_obj_set_size(btn_tare, 72, 42);
+
+    btn_mute = create_btn(btn_row, LV_SYMBOL_VOLUME_MAX, btn_mute_cb);
+    lv_obj_set_size(btn_mute, 48, 42);
+    btn_mute_label = lv_obj_get_child(btn_mute, 0);
 }
 
 /* ── Getters ─────────────────────────────────────────────── */
@@ -197,3 +209,5 @@ lv_obj_t* ui_get_status_label()        { return status_label; }
 lv_obj_t* ui_get_timer_setting_label() { return timer_set_label; }
 lv_obj_t* ui_get_pressure_unit_kg()    { return pressure_unit_kg; }
 lv_obj_t* ui_get_pressure_unit_bar()   { return pressure_unit_bar; }
+lv_obj_t* ui_get_mute_btn()            { return btn_mute; }
+lv_obj_t* ui_get_mute_label()          { return btn_mute_label; }

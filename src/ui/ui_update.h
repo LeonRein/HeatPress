@@ -27,4 +27,10 @@ void ui_arc_tick();
  */
 void ui_toggle_pressure_unit();
 
+/**
+ * Toggle mute state for the alert buzzer.
+ * Called from the mute button click handler.
+ */
+void ui_toggle_mute();
+
 #endif /* UI_UPDATE_H */
