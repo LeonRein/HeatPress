@@ -135,18 +135,18 @@ void ui_screen_create(QueueHandle_t actionQueue)
     lv_label_set_text(pressure_label, "0.0");
     lv_obj_align(pressure_label, LV_ALIGN_CENTER, 0, -6);
 
-    /* Unit label: kg (bottom-left, active) */
+    /* Unit label: kg (bottom-right, active) */
     pressure_unit_kg = lv_label_create(pressure_card);
     lv_obj_add_style(pressure_unit_kg, &style_label_small, 0);
     lv_label_set_text(pressure_unit_kg, "kg");
-    lv_obj_align(pressure_unit_kg, LV_ALIGN_BOTTOM_LEFT, 2, 0);
+    lv_obj_align(pressure_unit_kg, LV_ALIGN_BOTTOM_RIGHT, -2, 0);
     lv_obj_set_style_text_color(pressure_unit_kg, COLOR_ON_SURFACE, 0);
 
-    /* Unit label: bar (bottom-right, dimmed) */
+    /* Unit label: bar (bottom-left, dimmed) */
     pressure_unit_bar = lv_label_create(pressure_card);
     lv_obj_add_style(pressure_unit_bar, &style_label_small, 0);
     lv_label_set_text(pressure_unit_bar, "mbar");
-    lv_obj_align(pressure_unit_bar, LV_ALIGN_BOTTOM_RIGHT, -2, 0);
+    lv_obj_align(pressure_unit_bar, LV_ALIGN_BOTTOM_LEFT, 2, 0);
     lv_obj_set_style_text_color(pressure_unit_bar, COLOR_DIMMED, 0);
 
     /* Status label (right side, below pressure card) */
