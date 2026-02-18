@@ -92,7 +92,7 @@ void ui_screen_create(QueueHandle_t actionQueue)
     lv_obj_align(timer_arc, LV_ALIGN_TOP_LEFT, 12, 18);
     lv_arc_set_rotation(timer_arc, 270);
     lv_arc_set_bg_angles(timer_arc, 0, 360);
-    lv_arc_set_range(timer_arc, 0, 100);
+    lv_arc_set_range(timer_arc, 0, INT16_MAX);
     lv_arc_set_value(timer_arc, 0);
     lv_obj_remove_style(timer_arc, nullptr, LV_PART_KNOB);
     lv_obj_clear_flag(timer_arc, LV_OBJ_FLAG_CLICKABLE);

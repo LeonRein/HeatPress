@@ -195,7 +195,7 @@ void ui_handle_command(const UICommand &cmd)
                     break;
                 case AppState::ALERT:
                     set_alert_colors();
-                    lv_arc_set_value(ui_get_timer_arc(), 100);
+                    lv_arc_set_value(ui_get_timer_arc(), INT16_MAX);
                     break;
             }
             break;
@@ -233,14 +233,14 @@ void ui_arc_tick()
 
     /* Update arc (only during TIMING) */
     if (currentState == AppState::TIMING) {
-        int percent;
+        int progress;
         if (arcDurationMs == 0) {
-            percent = 100;
+            progress = INT16_MAX;
         } else {
-            percent = (int)((elapsed * 100UL) / arcDurationMs);
+            progress = (int)((elapsed * (unsigned long)INT16_MAX) / arcDurationMs);
         }
-        if (percent > 100) percent = 100;
-        lv_arc_set_value(ui_get_timer_arc(), percent);
+        if (progress > INT16_MAX) progress = INT16_MAX;
+        lv_arc_set_value(ui_get_timer_arc(), progress);
     }
 
     /* Update timer text (whole seconds) */
