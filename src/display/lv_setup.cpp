@@ -6,13 +6,17 @@
 #include <lvgl.h>
 #include "../config.h"
 
-/* ── TFT + Touch + LVGL internals ────────────────────────── */
+/* ── TFT + Touch + LVGL internals ──────────────────────── */
 
 static TFT_eSPI tft = TFT_eSPI();
 
 /* XPT2046 on its own VSPI bus */
 static SPIClass touchSpi = SPIClass(VSPI);
 static XPT2046_Touchscreen ts(PIN_XPT2046_CS, PIN_XPT2046_IRQ);
+
+/* Auto-calibration bounds (refined at runtime) */
+static uint16_t tsMinX = 300, tsMaxX = 3400;
+static uint16_t tsMinY = 400, tsMaxY = 3600;
 
 /* Double-buffered: two 320×20 line buffers */
 static const uint32_t BUF_PX = SCREEN_WIDTH * 20;
@@ -42,24 +46,19 @@ static void tft_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *
 
 static void touch_read_cb(lv_indev_drv_t *drv, lv_indev_data_t *data)
 {
-    if (ts.tirqTouched() && ts.touched()) {
+    if (ts.touched()) {
         TS_Point p = ts.getPoint();
 
-        /* Map raw XPT2046 coordinates to screen pixels.
-         * Raw range is roughly 200..3800 for both axes.
-         * Landscape rotation 1: raw X → screen X, raw Y → screen Y */
-        int16_t sx = map(p.x, 200, 3800, 0, SCREEN_WIDTH  - 1);
-        int16_t sy = map(p.y, 200, 3800, 0, SCREEN_HEIGHT - 1);
+        /* Auto-calibrate: widen range if touch falls outside */
+        if (p.x < tsMinX) tsMinX = p.x;
+        if (p.x > tsMaxX) tsMaxX = p.x;
+        if (p.y < tsMinY) tsMinY = p.y;
+        if (p.y > tsMaxY) tsMaxY = p.y;
 
-        /* Clamp to screen bounds */
-        if (sx < 0) sx = 0;
-        if (sx >= SCREEN_WIDTH)  sx = SCREEN_WIDTH  - 1;
-        if (sy < 0) sy = 0;
-        if (sy >= SCREEN_HEIGHT) sy = SCREEN_HEIGHT - 1;
-
+        /* Map raw to screen pixels */
+        data->point.x = map(p.x, tsMinX, tsMaxX, 1, SCREEN_WIDTH);
+        data->point.y = map(p.y, tsMinY, tsMaxY, 1, SCREEN_HEIGHT);
         data->state   = LV_INDEV_STATE_PRESSED;
-        data->point.x = sx;
-        data->point.y = sy;
     } else {
         data->state = LV_INDEV_STATE_RELEASED;
     }
@@ -78,7 +77,7 @@ void lv_setup_init()
     touchSpi.begin(PIN_XPT2046_CLK, PIN_XPT2046_MISO,
                    PIN_XPT2046_MOSI, PIN_XPT2046_CS);
     ts.begin(touchSpi);
-    ts.setRotation(1);
+    ts.setRotation(1);  /* Landscape, matching display rotation */
 
     /* Initialize LVGL */
     lv_init();
