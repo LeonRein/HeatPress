@@ -1,6 +1,7 @@
 #include "press_timer.h"
 #include "../config.h"
 #include <Arduino.h>
+#include <math.h>
 
 PressTimer::PressTimer(QueueHandle_t uiQueue, QueueHandle_t actionQueue)
     : uiQueue_(uiQueue)
@@ -14,8 +15,9 @@ void PressTimer::processPressure(float pressure)
 {
     currentPressure_ = pressure;
 
-    /* Only send pressure to UI if the displayed value (2 decimal kg) changed */
-    int displayVal = (int)(pressure / 10.0f); /* 0.01 kg resolution */
+    /* Only send pressure to UI if the displayed value (2 decimal kg) changed.
+     * Use roundf() to match snprintf("%.2f") rounding behaviour. */
+    int displayVal = (int)roundf(pressure / 10.0f); /* 0.01 kg resolution */
     if (displayVal != lastDisplayPressure_) {
         lastDisplayPressure_ = displayVal;
         UICommand cmd;

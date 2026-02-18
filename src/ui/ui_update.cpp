@@ -66,12 +66,16 @@ static void format_pressure(float grams, char *buf, size_t len)
         float forceN = (grams / 1000.0f) * 9.80665f;
         float areaM2 = (PRESS_AREA_WIDTH_MM * PRESS_AREA_HEIGHT_MM) * 1e-6f;
         float mbar = forceN / (areaM2 * 1e5f) * 1000.0f;
-        if (mbar > -0.05f && mbar < 0.0f) mbar = 0.0f;
+        /* Dead zone: values within half a display unit (0.05) show as 0.0 */
+        if (mbar > -0.05f && mbar < 0.05f) mbar = 0.0f;
         snprintf(buf, len, "%.1f", mbar);
     } else {
         float kg = grams / 1000.0f;
-        if (kg > -0.005f && kg < 0.0f) kg = 0.0f;
         snprintf(buf, len, "%.2f", kg);
+    }
+
+    if (strncmp(buf, "-0.00", 5) == 0) {
+        strcpy(buf, "0.00");
     }
 }
 
