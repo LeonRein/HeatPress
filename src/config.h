@@ -43,6 +43,13 @@
 #define TIMER_STEP_SECONDS      5       /* +/- button increment */
 
 /*====================
+   BUZZER / AUDIO
+ *====================*/
+#define PIN_AUDIO_OUT       26      /* DAC output on CYD (GPIO 26) */
+#define BUZZER_LEDC_CHANNEL 7       /* LEDC channel (avoid 0–3 used by backlight/LVGL) */
+#define BUZZER_FREQ_HZ      4000    /* Beep tone frequency */
+
+/*====================
    TASK CONFIG
  *====================*/
 #define UI_TASK_STACK_SIZE      8192

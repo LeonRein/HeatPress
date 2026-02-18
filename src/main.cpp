@@ -23,6 +23,7 @@
 #include "ui/ui_theme.h"
 #include "ui/ui_screen.h"
 #include "ui/ui_update.h"
+#include "audio/buzzer.h"
 
 /* ── FreeRTOS Queues ─────────────────────────────────────── */
 static QueueHandle_t sensorQueue = nullptr;   // SensorData
@@ -86,6 +87,9 @@ static void uiTask(void *pvParam)
 
     /* ── Build main screen ──────────────────────────── */
     ui_screen_create(actionQueue);
+
+    /* ── Initialize buzzer for alert beeps ───────────── */
+    buzzer_init();
 
     xLastWake = xTaskGetTickCount();
 

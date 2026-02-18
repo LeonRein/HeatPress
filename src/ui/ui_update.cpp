@@ -2,6 +2,7 @@
 #include "ui_screen.h"
 #include "ui_theme.h"
 #include "../config.h"
+#include "../audio/buzzer.h"
 
 #include <Arduino.h>
 #include <lvgl.h>
@@ -48,7 +49,7 @@ static void set_calibrating_overlay(bool show)
     }
 }
 static bool alertBlinkOn = false;
-static unsigned long lastBlinkMs = 0;
+static unsigned long nextBlinkMs = 0;
 
 /* Arc animation state (local to UI task for smooth updates) */
 static unsigned long arcStartMs  = 0;
@@ -125,16 +126,20 @@ static void alert_blink_tick()
     if (currentState != AppState::ALERT) return;
 
     unsigned long now = millis();
-    if (now - lastBlinkMs > 500) {
+    if (nextBlinkMs <= now) {
         alertBlinkOn = !alertBlinkOn;
-        lastBlinkMs = now;
+        while (nextBlinkMs <= now) {
+            nextBlinkMs += 500;
+        }
 
         if (alertBlinkOn) {
             lv_obj_set_style_bg_color(ui_get_pressure_card(), COLOR_ERROR, 0);
             lv_obj_set_style_bg_color(lv_scr_act(), COLOR_ALERT_BG, 0);
+            buzzer_on();
         } else {
             lv_obj_set_style_bg_color(ui_get_pressure_card(), lv_color_hex(0x4A0000), 0);
             lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x2A0000), 0);
+            buzzer_off();
         }
     }
 }
@@ -179,6 +184,10 @@ void ui_handle_command(const UICommand &cmd)
         }
 
         case UICommandType::UPDATE_STATE: {
+            /* Stop buzzer whenever we leave the ALERT state */
+            if (currentState == AppState::ALERT && cmd.state != AppState::ALERT) {
+                buzzer_off();
+            }
             currentState = cmd.state;
             switch (cmd.state) {
                 case AppState::IDLE:
@@ -194,6 +203,8 @@ void ui_handle_command(const UICommand &cmd)
                     lv_arc_set_value(ui_get_timer_arc(), 0);
                     break;
                 case AppState::ALERT:
+                    alertBlinkOn = false;
+                    nextBlinkMs = millis();
                     set_alert_colors();
                     lv_arc_set_value(ui_get_timer_arc(), INT16_MAX);
                     break;
